@@ -1,0 +1,302 @@
+{
+  "DB_INFO": {
+    "MYSQL_CONN_INFO": {
+      "host": "127.0.0.1",
+      "port": 3306,
+      "user": "root",
+      "passwd": "123456",
+      "db": "",
+      "charset": "utf8"
+    },
+    "POSTGRESQL_CONN_INFO": {
+      "host": "127.0.0.1",
+      "port": 5432,
+      "user": "dbuser",
+      "password": "password",
+      "database": "exampledb"
+    }
+  },
+
+  "FILE_SERVER": {
+    "server": {
+      "server1": {
+        "host": "115.29.237.50",
+        "port": 22,
+        "username": "root",
+        "password": "B166ererer"
+      }
+    },
+    "remotepath": ["/home/root/_temp/"],
+    "localpath": ["/home/mxw/linshi/"]
+  },
+
+  "DB_TABLE_STRUCTURE": {
+    "FROM-mysql": {
+      "USER-GROUP": {
+        "users": {
+          "_sql_query": "SELECT convert(user_id, signed) as user_id, convert(gender, signed) as gender, convert(birthday, CHAR) as birthday, convert(create_date, char) as register_date, convert(district, char) as district, convert(province, char) as province FROM lawson_ph2.t_user WHERE %s ",
+          "_delta_field": {"user_id": 1}
+        },
+        "user_grouping": {
+          "_sql_query": "SELECT user_id, timestamp, latitude, longitude FROM location lc WHERE lc.user_id"
+        },
+        "user_groups": {
+          "_sql_query": "SELECT user_id, timestamp, latitude, longitude FROM location lc WHERE lc.user_id",
+          "_delta_field": {"user_id": 1, "timestamp": ""}
+        },
+        "user_group_closure_table": {
+          "_sql_query": "SELECT user_id, timestamp, latitude, longitude FROM location lc WHERE lc.user_id",
+          "_delta_field": {"user_id": 1, "timestamp": ""}
+        },
+        "point_history": {
+          "_sql_query": "",
+          "_delta_field": {"user_id": 1, "timestamp": "", "action_type": 1}
+        }
+      },
+
+      "SHOP-GROUP": {
+        "shops": {
+          "_sql_query": ""
+        },
+        "shop_classification": {
+          "_sql_query": ""
+        },
+        "shop_classes": {
+          "_sql_query": ""
+        },
+        "shop_classification_closure_table": {
+          "_sql_query": ""
+        }
+      },
+
+      "PRODUCTS-GROUP": {
+        "products": {
+          "_sql_query": ""
+        },
+        "product_classification": {
+          "_sql_query": ""
+        },
+        "product_classes": {
+          "_sql_query": ""
+        },
+        "product_class_closure_table": {
+          "_sql_query": ""
+        },
+        "product_prices": {
+          "_sql_query": ""
+        }
+      },
+
+      "COUPONS-GROUP": {
+        "coupons": {
+          "_sql_query": ""
+        },
+        "coupon_classification": {
+          "_sql_query": ""
+        },
+        "coupon_classes": {
+          "_sql_query": ""
+        },
+        "coupon_class_closure_table": {
+          "_sql_query": ""
+        }
+      },
+
+      "CAMPAIGNS-GROUP": {
+        "campaigns": {
+          "_sql_query": ""
+        }
+      },
+
+      "RELATIONSHIP-GROUP": {
+        "shop_products": {
+          "_sql_query": ""
+        },
+        "user_coupons": {
+          "_sql_query": ""
+        },
+        "coupon_shops": {
+          "_sql_query": ""
+        },
+        "coupon_products": {
+          "_sql_query": ""
+        },
+        "campaign_products": {
+          "_sql_query": ""
+        },
+        "stamp_history": {
+          "_sql_query": ""
+        },
+        "coupon_exchange_history": {
+          "_sql_query": ""
+        }
+      },
+      "RELATIONSHIP-RECEIPT": {
+        "receipt_item": {
+          "_sql_query": ""
+        },
+        "receipts": {
+          "_sql_query": ""
+        },
+        "receipt_payments": {
+          "_sql_query": ""
+        }
+      }
+    },
+
+    "TO-postgresql": {
+      "USERS-GROUP": {
+        "users": {
+          "db": "exampledb",
+          "field": ["user_id", "gender", "birthday", "register_date", "district", "province"],
+          "fieldType": ["int", "int", "str", "str", "str", "str"]
+        },
+        "user_grouping": {
+          "field": [],
+          "fieldType": []
+        },
+        "user_groups": {
+          "field": [],
+          "fieldType": []
+        },
+        "user_group_closure_table": {
+          "field": [],
+          "fieldType": []
+        },
+        "point_history": {
+          "field": [],
+          "fieldType": []
+        }
+      },
+
+      "SHOP-GROUP": {
+        "shops": {
+          "field": [],
+          "fieldType": []
+        },
+        "shop_classification": {
+          "field": [],
+          "fieldType": []
+        },
+        "shop_classes": {
+          "field": [],
+          "fieldType": []
+        },
+        "shop_classification_closure_table": {
+          "field": [],
+          "fieldType": []
+        }
+      },
+
+      "PRODUCTS-GROUP": {
+        "products": {
+          "field": [],
+          "fieldType": []
+        },
+        "product_classification": {
+          "field": [],
+          "fieldType": []
+        },
+        "product_classes": {
+          "field": [],
+          "fieldType": []
+        },
+        "product_class_closure_table": {
+          "field": [],
+          "fieldType": []
+        },
+        "product_prices": {
+          "field": [],
+          "fieldType": []
+        }
+      },
+
+      "COUPONS-GROUP": {
+        "coupons": {
+          "field": [],
+          "fieldType": []
+        },
+        "coupon_classification": {
+          "field": [],
+          "fieldType": []
+        },
+        "coupon_classes": {
+          "field": [],
+          "fieldType": []
+        },
+        "coupon_class_closure_table": {
+          "field": [],
+          "fieldType": []
+        }
+      },
+
+      "CAMPAIGNS-GROUP": {
+        "campaigns": {
+          "field": [],
+          "fieldType": []
+        }
+      },
+
+      "RELATIONSHIP-GROUP": {
+        "shop_products": {
+          "field": [],
+          "fieldType": []
+        },
+        "user_coupons": {
+          "field": [],
+          "fieldType": []
+        },
+        "coupon_shops": {
+          "field": [],
+          "fieldType": []
+        },
+        "coupon_products": {
+          "field": [],
+          "fieldType": []
+        },
+        "campaign_products": {
+          "field": [],
+          "fieldType": []
+        }
+      },
+
+      "RELATIONSHIP-RECEIPT": {
+        "receipt_item": {
+          "field": [],
+          "fieldType": []
+        },
+        "receipts": {
+          "field": [],
+          "fieldType": []
+        },
+        "receipt_payments": {
+          "field": [],
+          "fieldType": []
+        }
+      },
+
+      "LOGS-GROUP": {
+        "telemetry": {
+          "field": ["user_id", "timestamp", "interaction_type", "object_id", "device", "content"],
+          "fieldType": ["int", "str", "int", "int", "int", "str"]
+        }
+      }
+    }
+  },
+
+  "OTHERS_PARAMS": {
+    "READ_FILE_MAX_ROWS": 10000,
+    "DETAL_NUM": 10000,
+    "MAIL_CONF": {
+        "FROM_ADDR": "twen.ma@yo-ren.com",
+        "PASSWORD": "twen2015#",
+        "TO_ADDR": ["787145451@qq.com"],
+        "SUBJECT": "-ETL-Analytics-Database-Batch-",
+        "SMTP_SERVER": "smtp.163.com",
+        "PORT": 25,
+        "ATTACHMENT": ""
+    }
+  },
+
+  "VERSION": "1.0.0"
+}

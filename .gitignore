@@ -1,0 +1,9 @@
+.idea
+*.pyc
+*.log
+test.sql
+*.sh
+build
+*.egg-info
+dist
+.fuse_hidden*

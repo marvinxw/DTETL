@@ -1,0 +1,113 @@
+# 定义logger模块，root是父类，必需存在的，其它的是自定义。
+# logging.getLogger(NAME)便相当于向logging模块注册了一种日志打印
+# name 中用 . 表示 log 的继承关系
+[loggers]
+keys=root,infoLogger,errorLogger,bashLogger,logfileLogger
+
+# 定义handler
+[handlers]
+keys=infoHandler,errorHandler,bashHandler,logfileHandler
+
+# 定义格式化输出
+[formatters]
+keys=infoFmt,errorFmt
+
+#--------------------------------------------------
+# 实现上面定义的logger模块，必需是[logger_xxxx]这样的形式
+#--------------------------------------------------
+# [logger_xxxx] logger_模块名称
+# level     级别，级别有DEBUG、INFO、WARNING、ERROR、CRITICAL
+# handlers  处理类，可以有多个，用逗号分开
+# qualname  logger名称，应用程序通过 logging.getLogger获取。对于不能获取的名称，则记录到root模块。
+# propagate 是否继承父类的log信息，0:否 1:是
+[logger_root]
+level=INFO
+handlers=errorHandler
+
+[logger_errorLogger]
+level=ERROR
+handlers=errorHandler
+propagate=0
+qualname=errorLogger
+
+[logger_infoLogger]
+level=INFO
+handlers=infoHandler
+propagate=0
+qualname=infoLogger
+
+[logger_bashLogger]
+level=INFO
+handlers=bashHandler
+propagate=0
+qualname=bashLogger
+
+[logger_logfileLogger]
+level=INFO
+handlers=logfileHandler
+propagate=0
+qualname=logfileLogger
+
+#--------------------------------------------------
+# handler
+#--------------------------------------------------
+# [handler_xxxx]
+# class handler类名
+# level 日志级别
+# formatter，上面定义的formatter
+# args handler初始化函数参数
+
+[handler_infoHandler]
+class=FileHandler
+level=DEBUG
+formatter=infoFmt
+args=('D:/yoren-project/2017-mysql-To-postgres/lawson_etl/tblEtl/logs/etlinfo.log', 'a')
+
+[handler_bashHandler]
+class=StreamHandler
+level=DEBUG
+formatter=infoFmt
+args=(sys.stdout,)
+
+[handler_errorHandler]
+# class=logging.handlers.TimedRotatingFileHandler
+# 从handler被创建的时间算起，不能按自然时间 rotation 切分，除非程序一直运行，否则这个功能会有问题
+# Python 多进程日志记录 (http://blogread.cn/it/article/4175?f=wb2)
+class=logging.handlers.RotatingFileHandler
+level=ERROR
+formatter=errorFmt
+# a代表从文件最后追加, 100*1024*1024: 50M rotate一个文件, 总共10个文件
+args=('D:/yoren-project/2017-mysql-To-postgres/lawson_etl/tblEtl/logs/etlerror.log', 'a', 50*1024*1024, 10)
+
+[handler_logfileHandler]
+class=logging.handlers.RotatingFileHandler
+level=INFO
+formatter=infoFmt
+args=('D:/yoren-project/2017-mysql-To-postgres/lawson_etl/tblEtl/logs/logfile.log', 'a', 50*1024*1024, 10)
+
+#--------------------------------------------------
+# 日志格式
+#--------------------------------------------------
+# %(asctime)s       年-月-日 时-分-秒,毫秒 2016-09-26 20:10:43,745
+# %(filename)s      文件名，不含目录
+# %(pathname)s      目录名，完整路径
+# %(funcName)s      函数名
+# %(levelname)s     级别名
+# %(lineno)d        行号
+# %(module)s        模块名
+# %(message)s       消息体
+# %(name)s          日志模块名
+# %(process)d       进程id
+# %(processName)s   进程名
+# %(thread)d        线程id
+# %(threadName)s    线程名
+
+[formatter_infoFmt]
+format=%(asctime)s [%(levelname)s] %(message)s
+datefmt=
+class=logging.Formatter
+
+[formatter_errorFmt]
+format=%(asctime)s [%(levelname)s] %(message)s
+datefmt=
+class=logging.Formatter

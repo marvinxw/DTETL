@@ -1,0 +1,9 @@
+psycopg2==2.6.1
+paramiko==2.0.0
+yum install libffi libffi-devel
+sudo yum install postgresql-devel
+sudo yum -y install python-psycopg2
+sudo yum install python-mysqldb
+sudo yum -y install python-pip
+# sudo ln -s /usr/local/lib/python27/bin/etlbin /usr/bin/etlbin
+# cd /usr/local/lib/python27/lib/python2.7/site-packages/

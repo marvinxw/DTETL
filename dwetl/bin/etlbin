@@ -1,0 +1,139 @@
+#!/usr/bin/env python
+# coding=utf-8
+import time
+from optparse import OptionParser
+from dwetl.petl.UD_Exception import ParamsError, FileNotFind
+from dwetl.petl.clean_etl_conf import clean_etl_conf, clean_datetime, clean_file_server, clean_others_params
+from dwetl.petl.delta_control import t_delta_conf
+from dwetl.petl.etl_task import EtlWork
+from dwetl.psmtp.smtpmail import mail_main
+from dwetl.plog.logtool import etllog
+from dwetl.refresh.refresh_view import RefreshMaterializedView
+from dwetl.settings import LOG_TIME_PARAMS
+
+"""
+    示例:
+        etlbin -g [USERS-GROUP | RELATIONSHIP-GROUP | SHOP-GROUP | LOGS-GROUP | CAMPAIGNS-GROUP | PRODUCTS-GROUP | RELATIONSHIP-RECEIPT | COUPONS-GROUP]
+        etlbin -t [point_history | user_group_closure_table | users | user_grouping | user_groups | user_coupons | coupon_products | campaign_products | coupon_shops | shop_products | shops | shop_classification | shop_classes | shop_classification_closure_table | telemetry | campaigns | product_class_closure_table | product_prices | product_classes | products | product_classification | receipt_item | receipt_payments | receipts | coupon_classification | coupon_classes | coupon_class_closure_table | coupons]
+        # log file can not exec LOGS-GROUP
+        etlbin -l access_log 20161010
+        etlbin -e
+"""
+
+
+class EtlBin(object):
+    def __init__(self):
+        self.usage = "usage: %prog [options] arg"
+        self.parser = OptionParser(usage=self.usage)
+        self.version = clean_others_params._get_version()
+
+    def _add_option(self):
+        self.parser.add_option("-v", "--version", action="store_true", dest="version", default=False, help="current ETL version")
+        self.parser.add_option("-g", "--groups", dest="table_group", help="ETL by groups")
+        self.parser.add_option("-t", "--table", dest="table", help="ETL by table")
+        self.parser.add_option("-e", "--email", action="store_true", dest="email", default=False, help="ETL email")
+        self.parser.add_option("-l", "--logfile", dest="log", help="ETL Log file")
+        self.parser.add_option("-r", "--refresh", dest="view", help="refresh materialized view")
+
+    def _get_bin(self):
+        self._add_option()
+        (options, args) = self.parser.parse_args()
+
+        if options.version:
+            print "VERSION %s" % self.version
+
+        elif options.table_group or options.table:
+            self._conf_db(options, args)
+
+        elif options.log:
+            self._conf_file(options, args)
+
+        elif options.email:
+            self.main_email()
+
+        elif options.view:
+            self._refresh_view(options, args)
+
+        else:
+            self.parser.print_help()
+
+    def _conf_db(self, options, args):
+        if len(args) > 0:
+            raise ParamsError(args, ', [etlbin] 参数多余一个!')
+
+        if options.table_group and options.table_group in clean_etl_conf._get_groups():
+            self.main_db(options.table_group)
+        elif options.table and options.table in clean_etl_conf._get_tables():
+            self.main_db(options.table)
+        else:
+            raise ParamsError(options.table_group or options.table, ', [etlbin] 不存在的表或组!')
+
+    def _conf_file(self, options, args):
+        # 时间参数
+        if len(args) == 1:
+            LOG_TIME_PARAMS.append(args[0])
+        elif len(args) > 1:
+            raise ParamsError(options.log, ', [etlbin] 多于一个时间参数!')
+
+        # 文件
+        if options.log and options.log in clean_file_server._set_file_or_table():
+            self.main_file(options.log)
+        else:
+            raise FileNotFind(options.log, ', [etlbin] 暂不支持这种文件!')
+
+    def main_db(self, type):
+        start_time = time.time()
+        etllog.info('========== [ETL] START TIME: %s ==========' % clean_datetime._today())
+
+        etllog.info('========== [ETL] READ DELTA TABLE ==========')
+        t_delta_conf._detal_caches()
+
+        etllog.info('========== [ETL] START TASK ==========')
+        etl_work = EtlWork(type)
+        etl_work.start()
+        etllog.info('========== [ETL] FINISH TASK ==========')
+
+        t_delta_conf._close()
+        etllog.info('========== [ETL] END TIME: %s ==========' % clean_datetime._today())
+        etllog.info('========== [ETL] TIME ELAPSED %s s ==========' % (time.time()-start_time))
+        # mail_main()
+
+    def main_file(self, type):
+        start_time = time.time()
+        etllog.info('========== [ETL] START TIME: %s ==========' % clean_datetime._today())
+
+        etllog.info('========== [ETL] START TASK ==========')
+        etl_work = EtlWork(type)
+        etl_work.start()
+        etllog.info('========== [ETL] FINISH TASK ==========')
+
+        etllog.info('========== [ETL] END TIME: %s ==========' % clean_datetime._today())
+        etllog.info('========== [ETL] TIME ELAPSED %s s ==========' % (time.time()-start_time))
+        # mail_main()
+
+    def main_email(self):
+        start_time = time.time()
+        etllog.info('========== [ETL] EMAIL START TIME: %s ==========' % clean_datetime._today())
+
+        etllog.info('========== [ETL] EMAIL ==========')
+        mail_main()
+
+        etllog.info('========== [ETL] EMAIL END TIME: %s ==========' % clean_datetime._today())
+        etllog.info('========== [ETL] TIME ELAPSED %s s ==========' % (time.time()-start_time))
+
+    def _refresh_view(self, options, args):
+        if len(args) > 0:
+            raise ParamsError(args, ', [etlbin] 参数多余一个!')
+
+        start_time = time.time()
+        etllog.info('========== [ETL] REFRESH MATERIALIZED VIEW START TIME: %s ==========' % clean_datetime._today())
+
+        rmv = RefreshMaterializedView(options.view)
+        rmv._refresh_start()
+
+        etllog.info('========== [ETL] REFRESH MATERIALIZED VIEW END TIME: %s ==========' % clean_datetime._today())
+        etllog.info('========== [ETL] TIME ELAPSED %s s ==========' % (time.time()-start_time))
+
+etl_bin = EtlBin()
+etl_bin._get_bin()
+

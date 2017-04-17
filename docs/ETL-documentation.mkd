@@ -1,0 +1,241 @@
+# ETL文档
+
+### 安装配置
+``
+#### 环境配置
+    1.python, pip的安装自查
+    2.安装ETL的依赖
+        pip install -r requirements.txt
+        
+    3.安装mysql-python
+        sudo yum install MySQL-python
+
+#### ETL配置文件
+
+```
+# 数据库的配置
+
+DB_INFO = {
+    "MYSQL_CONN_INFO": { # mysql连接配置
+        "host": "",
+        "port": 3307,
+        "user": "",
+        "passwd": "",
+        "db": "",
+        "charset": "utf8"
+    },
+    "POSTGRESQL_CONN_INFO": { # postgre连接配置
+        "host": "127.0.0.1",
+        "port": 5432,
+        "user": "",
+        "password": "",
+        "database": ""
+    }
+}
+
+
+# 文件的配置
+
+FILE_SERVER = {
+    "server": { # 文件服务器配置
+        "server1": {
+            "host": "121.196.233.27",
+            "port": 22,
+            "username": "ydoor",
+            "password": "SvyrOb81tQ"
+        }
+    },
+    "remotepath": ["/var/apps/logs/"], # 文件远程目录, 多个以逗号隔开;
+    "localpath": ["/home/linshi/"], # 文件存放的本地目录, 多个以逗号隔开;
+        
+        # localpath 和 remotepath是一对一的, eg: remotepath[0]的文件会存到localpath[0]
+
+    "file_type_conf": { # 支持的文件名称
+        "access_log": "access.log."
+    },
+    "file_table_mapping": { # 文件对应的表映射
+        "access_log": "telemetry"
+    }
+}
+
+# FROM一个数据库抽取数据, TO一个数据库插入数据的配置
+DB_TABLE_STRUCTURE = {
+    "FROM-mysql": { # FROM是固定的, - 后面的是数据库类型; 代表数据从这个数据库中取出
+        "USER-GROUP": { # 分组, 任务也可以一组一组的执行 
+            "users": { # 表
+                "_sql_query": "SELECT convert(user_id, signed) as user_id, convert(gender, signed) as gender, convert(birthday, CHAR) as birthday, convert(create_date, char) as register_date, convert(district, char) as district, convert(province, char) as province FROM lawson_common.t_user WHERE user_id >= {user_id}" # 抽取数据的SQL语句
+            },
+            "user_grouping": { # 表
+                "_sql_query": "" # 抽取数据的SQL语句
+            }
+        },
+        
+        ......
+        
+        "RELATIONSHIP-RECEIPT": { # 分组, 任务也可以一组一组的执行
+            "receipt_item": { # 表
+                "_sql_query": "" # 抽取数据的SQL语句
+            }
+        }
+    },
+
+    "TO-postgresql": { # TO是固定的, - 后面的是数据库类型; 代表数据插入到这个数据库中
+        "USER-GROUP": { # 和FROM-mysql的组一致
+            "users": {# 表
+                "field": ["user_id", "gender", "birthday", "register_date", "district", "province"], # 需要插入数据的字段
+                "fieldType": ["int", "int", "str", "str", "str", "str"], # 需要在代码里格式化为何种数据类型
+                "delta_table": ["lawson_db.t_user"],
+                "primarykey": ["user_id"] # 不知道主键是什么，不知主键有几个，不知道主键在DDL中的位置
+            }
+        },
+        
+        ......
+        
+        "RELATIONSHIP-RECEIPT": {
+            "receipt_item": {
+                "field": ["receipt_id", "itemized_number", "product_id", "item_sell_price", "coupon_id", "promotion_type", "discount_price", "quantity", "measured_quantity"], # 需要插入数据的字段
+                "fieldType": ["int", "int", "int", "float", "int", "int", "float", "int", "float"], # 需要在代码里格式化为何种数据类型
+                "delta_field": ["receipt_id"] # 这张表的增量字段
+            }
+        },
+
+        "FILES": { # 这个是文件数据的表配置, 是文件的数据会存到这个配置下面;
+            "telemetry": {
+                "field": ["user_id", "timestamp", "interaction_type", "object_id", "device", "content"], # 需要插入数据的字段
+                "fieldType": ["int", "str", "int", "int", "int", "str"], # 需要在代码里格式化为何种数据类型
+            }
+        }
+    }
+}
+
+# 其它参数配置
+OTHERS_PARAMS = {
+    "READ_FILE_MAX_ROWS": 10000, # 读文件, 一次读取10000行数据
+    "DETAL_NUM": 10000, # 数据库分页, 每次读取10000行
+    "MAIL_CONF": { # 邮件配置
+        "FROM_ADDR": "twen.ma@yo-ren.com",
+        "PASSWORD": "twen2015#",
+        "TO_ADDR": ["787145451@qq.com", "twen.ma@yo-ren.com"],
+        "SUBJECT": "-ETL-Analytics-Database-Batch-",
+        "SMTP_SERVER": "smtp.qiye.163.com",
+        "PORT": 25,
+        "ATTACHMENT": ""
+    },
+    "ERROR_LOG": "/media/win7D/yoren-project/mysql-to-postgresql/lawson_etl/tblEtl/logs/etlerror.log", # 错误日志路径
+    "___VERSION__": "0.0.3" # 版本号
+}
+
+```
+
+
+#### 关于提到的数据类型转换
+
+从mysql取出的数据:
+
+    1.整形都是
+        1   ->      1L
+            但是, 该字段是int类型, 会插入错误, 需要转换为int
+
+    2.字符串型都是
+        'a'     ->      u'a'
+            但是, mysql编码用的是utf-8, 插入unicode编码出错, 需要转为str
+
+> 转换列表
+
+|mysql|python-code|
+|---|---|
+|  int 或 bigint | int |
+|时间类型|str|
+|字符串类型|str|
+|float|float|
+|decimal|float|
+|BIT|bytes|
+
+
+#### ETL表增量配置文件
+
+>表:
+
+```
+
+CREATE TABLE t_delta_conf (
+rowid serial4 NOT NULL, # 主键
+tables varchar(255) NOT NULL, # 表
+primarykey json NOT NULL, # 增量字段, json格式, eg: '{"coupon_class_id": 1}'
+create_date timestamptz(0) NOT NULL, # 第一次插入数据的时间
+update_date timestamptz(0) NOT NULL  # 修改增量字段的时间
+)
+WITHOUT OIDS;
+
+```
+
+
+### 模块
+
+
+#### bin模块
+
+> 命令行执行模块
+
+```
+    etlbin -g [USERS-GROUP | RELATIONSHIP-GROUP | SHOP-GROUP | LOGS-GROUP | CAMPAIGNS-GROUP | PRODUCTS-GROUP | RELATIONSHIP-RECEIPT | COUPONS-GROUP]
+    etlbin -t [point_history | user_group_closure_table | users | user_grouping | user_groups | user_coupons | coupon_products | campaign_products | coupon_shops | shop_products | shops | shop_classification | shop_classes | shop_classification_closure_table | telemetry | campaigns | product_class_closure_table | product_prices | product_classes | products | product_classification | receipt_item | receipt_payments | receipts | coupon_classification | coupon_classes | coupon_class_closure_table | coupons]
+    etlbin -l access_log 20161010
+    etlbin -e
+    etlbin -v
+```
+
+
+#### logfile模块
+
+> etlbin -l access_log 20161010
+
+1.从服务器上读取, 指定时间参数的指定文件
+    判断: 如果本地有这个文件, 程序终止, 需要删除这个文件;
+2.一次读取10000行
+3.load_datas.bulk_put()插入这10000行数据
+
+
+#### petl模块
+
+> etlbin -g [USERS-GROUP | RELATIONSHIP-GROUP | SHOP-GROUP | LOGS-GROUP | CAMPAIGNS-GROUP | PRODUCTS-GROUP | RELATIONSHIP-RECEIPT | COUPONS-GROUP]
+
+> etlbin -t [point_history | user_group_closure_table | users | user_grouping | user_groups | user_coupons | coupon_products | campaign_products | coupon_shops | shop_products | shops | shop_classification | shop_classes | shop_classification_closure_table | telemetry | campaigns | product_class_closure_table | product_prices | product_classes | products | product_classification | receipt_item | receipt_payments | receipts | coupon_classification | coupon_classes | coupon_class_closure_table | coupons]
+
+
+1.etl_task.py解析组任务,表任务,文件任务
+
+2.extract_datas.py抽取数据
+
+    > extract_datas._bulk_get()
+
+3.transform.py转换数据格式
+
+4.load_datas.py数据插入
+
+    > load_datas.bulk_put()
+
+5.delta_control.py增量保存和控制分页
+
+
+#### plog模块
+
+log的配置模块
+有critical, error, warning, debug, info
+1.log从最后一行追加
+2.50M rotate一个文件
+3.总共10个文件
+
+
+#### psmtp模块
+
+邮件模块
+1.任务执行完后读取最后100行
+2.如果读取的行的时间,在当前时间1小时内,发送这100行
+3.更多的log信息请登陆服务器查看
+
+
+#### logs
+
+存放logs的文件夹
+
