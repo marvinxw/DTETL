@@ -1,5 +1,5 @@
-psycopg2==2.6.1
-paramiko==2.0.0
+# psycopg2==2.6.1
+# paramiko==2.0.0
 yum install libffi libffi-devel
 sudo yum install postgresql-devel
 sudo yum -y install python-psycopg2
