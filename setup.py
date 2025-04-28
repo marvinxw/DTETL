@@ -8,7 +8,7 @@ except ImportError:
 
 ___version__ = "0.0.3"
 __author__ = "ETL"
-__author_email__ = "twen.ma@yo-ren.com"
+__author_email__ = "test.test.com"
 __url__ = ""
 __packages__ = ["dwetl", "dwetl/bin", "dwetl/logfile", "dwetl/petl", "dwetl/refresh", "dwetl/plog", "dwetl/psmtp", "dwetl/settings"]
 __scripts__ = ["dwetl/bin/etlbin"]
